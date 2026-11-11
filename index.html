@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7fafc">
+  <title>PWM Signal Demo — Two Periods</title>
+  <style>
+    :root {font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; color:#17283b; background:#f7fafc;}
+    * {box-sizing:border-box}
+    body {margin:0; padding:32px 18px;}
+    main {max-width:970px; margin:auto;}
+    h1 {font-size:clamp(26px,4vw,36px); margin:0 0 6px; letter-spacing:-.04em}
+    .subtitle {margin:0 0 24px; color:#64748b; line-height:1.6}
+    .panel {background:#fff; border:1px solid #e2e8f0; border-radius:18px; box-shadow:0 8px 25px #1e293b0b; padding:24px; margin-bottom:18px}
+    .stats {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}
+    .stat {background:#f5f9fa;border-radius:12px;padding:13px 16px}
+    .stat .label {display:block;color:#687b8d;font-size:12px;font-weight:600;margin-bottom:7px}
+    .stat .value {font-size:23px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+    .chartwrap {width:100%; overflow:hidden}
+    svg {display:block;width:100%;height:auto}
+    .axis-label {font-size:15px;fill:#4c6276}
+    .tick {font-size:13px;fill:#607286}
+    .control-top {display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .control-top label {font-size:17px;font-weight:700}
+    .control-top output {font-size:20px;font-weight:750;color:#087f8c;}
+    input[type=range] {display:block;width:100%;margin:21px 0 4px;accent-color:#087f8c;cursor:pointer}
+    .ends {display:flex;justify-content:space-between;color:#77899b;font-size:13px}
+    .note {font-size:14px;line-height:1.7;color:#64748b;margin:15px 0 0}
+    .preset {border:1px solid #ccd9de;color:#315265;background:#fff;border-radius:9px;padding:9px 13px;cursor:pointer;font:inherit;margin:0 7px 0 0}
+    .preset:hover,.preset:focus-visible {border-color:#087f8c;color:#087f8c;outline-color:#087f8c}
+    .buttons {margin-top:18px}
+    @media(max-width:640px){body{padding:16px 12px}.panel{padding:16px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.stat .value{font-size:20px}}
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Interactive PWM Signal</h1>
+    <p class="subtitle">Explore a pulse-width modulated signal over exactly two periods. Drag the slider to change its duty cycle.</p>
+    <section class="panel" aria-label="PWM waveform">
+      <div class="stats" aria-live="polite">
+        <div class="stat"><span class="label">Amplitude</span><span class="value" id="amplitude">4.8 V</span></div>
+        <div class="stat"><span class="label">Period</span><span class="value" id="period">20 ms</span></div>
+        <div class="stat"><span class="label">Duty Cycle</span><span class="value" id="duty">7.5%</span></div>
+        <div class="stat"><span class="label">Pulse Width</span><span class="value" id="pulse">1.50 ms</span></div>
+      </div>
+      <div class="chartwrap">
+        <svg viewBox="0 0 900 370" role="img" aria-labelledby="chart-title chart-desc">
+          <title id="chart-title">PWM waveform for two full periods</title>
+          <desc id="chart-desc">A 4.8 volt PWM signal with a 20 millisecond period and adjustable duty cycle.</desc>
+          <rect x="86" y="22" width="780" height="270" fill="#fbfdff" rx="5"/>
+          <g stroke="#e3ebf1" stroke-width="1">
+            <path d="M86 42H866 M86 166H866 M86 290H866"/>
+            <path d="M86 42V290 M281 42V290 M476 42V290 M671 42V290 M866 42V290"/>
+          </g>
+          <path d="M86 25V290H866" fill="none" stroke="#879aab" stroke-width="1.5"/>
+          <path d="M476 42V290" fill="none" stroke="#9fadb8" stroke-width="1.3" stroke-dasharray="5 5" />
+          <g class="tick" text-anchor="end"><text x="73" y="47">4.8</text><text x="73" y="295">0</text></g>
+          <g class="tick" text-anchor="middle"><text x="86" y="315">0</text><text x="281" y="315">10</text><text x="476" y="315">20</text><text x="671" y="315">30</text><text x="866" y="315">40</text></g>
+          <text x="477" y="354" text-anchor="middle" class="axis-label">Time (ms)</text>
+          <text transform="translate(23 166) rotate(-90)" text-anchor="middle" class="axis-label">Voltage (V)</text>
+          <path id="signal" d="" fill="none" stroke="#087f8c" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <p class="note">Frequency: <strong>50 Hz</strong>. The waveform shows 0–40 ms, which equals two complete 20 ms periods.</p>
+    </section>
+    <section class="panel" aria-label="PWM control">
+      <div class="control-top"><label for="duty-slider">Adjust Duty Cycle</label><output id="slider-value" for="duty-slider">7.5%</output></div>
+      <input id="duty-slider" type="range" min="0" max="100" step="0.5" value="7.5" aria-label="Duty cycle percentage">
+      <div class="ends"><span>0%</span><span>100%</span></div>
+      <div class="buttons">
+        <button class="preset" type="button" data-duty="5">1.0 ms (5%)</button>
+        <button class="preset" type="button" data-duty="7.5">1.5 ms (7.5%)</button>
+        <button class="preset" type="button" data-duty="10">2.0 ms (10%)</button>
+      </div>
+      <p class="note">Duty Cycle = Pulse Width / Period × 100%. For example, a 1.5 ms high pulse in a 20 ms period gives a duty cycle of 7.5%. These presets illustrate common servo-control pulses; actual servo limits depend on the device.</p>
+    </section>
+  </main>
+  <script>
+    (() => {
+      const amplitudeV = 4.8;
+      const periodMs = 20;
+      const svgPath = document.getElementById('signal');
+      const slider = document.getElementById('duty-slider');
+      const dutyLabel = document.getElementById('duty');
+      const sliderLabel = document.getElementById('slider-value');
+      const pulseLabel = document.getElementById('pulse');
+      const chartDescription = document.getElementById('chart-desc');
+      const left = 86, width = 780, highY = 42, lowY = 290;
+      const msToX = ms => left + width * ms / (2 * periodMs);
+      function update() {
+        const dutyPercent = Number(slider.value);
+        const pulseMs = periodMs * dutyPercent / 100;
+        dutyLabel.textContent = `${dutyPercent.toFixed(1)}%`;
+        sliderLabel.textContent = `${dutyPercent.toFixed(1)}%`;
+        pulseLabel.textContent = `${pulseMs.toFixed(2)} ms`;
+        chartDescription.textContent = `A ${amplitudeV} volt PWM signal with a ${periodMs} millisecond period and a ${dutyPercent.toFixed(1)} percent duty cycle.`;
+        let d;
+        if (dutyPercent === 0) d = `M${left} ${lowY}H${msToX(40)}`;
+        else if (dutyPercent === 100) d = `M${left} ${highY}H${msToX(40)}`;
+        else {
+          d = `M${msToX(0)} ${highY}`;
+          for (let i = 0; i < 2; i++) {
+            const start = i * periodMs;
+            d += `H${msToX(start + pulseMs)}V${lowY}`;
+            d += `H${msToX(start + periodMs)}`;
+            if (i === 0) d += `V${highY}`;
+          }
+        }
+        svgPath.setAttribute('d', d);
+      }
+      slider.addEventListener('input', update);
+      document.querySelectorAll('[data-duty]').forEach(button => {
+        button.addEventListener('click', () => {slider.value = button.dataset.duty; update();});
+      });
+      update();
+    })();
+  </script>
+</body>
+</html>
